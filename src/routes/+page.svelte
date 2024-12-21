@@ -145,6 +145,7 @@
         padding: 1rem;
         width: 100%;
         box-sizing: border-box;
+        overflow: scroll;
     }
     .export-data > div > p {
         width: 100%;
@@ -191,6 +192,7 @@
         margin: 1rem;
         background-color: #f0f0f0;
         border-radius: 3px;
+
     }
 </style>
 
