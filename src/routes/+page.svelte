@@ -112,6 +112,7 @@
         display: inline-block;
     }
 
+    .export-btn,
     .done {
         background-color: rgb(0, 102, 255);
         color: white;
@@ -129,10 +130,70 @@
         font-size: 1rem;
     }
     
+    .export-data {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+
+    .export-data > div {
+        background-color: #f0f0f0;
+        height: 100%;
+        margin: 1rem;
+        border-radius: 3px;
+        padding: 1rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .export-data > div > p {
+        width: 100%;
+        box-sizing: border-box;
+        text-wrap: wrap;
+        word-break: break-all;
+    }
+    .export-data > div > button {
+        background-color: white;
+        border: black .5px solid;
+        aspect-ratio: 3;
+        width: fit-content;
+        margin-top: auto;
+    }
+
+    .import-btn {
+        background-color: rgb(255, 69, 69);
+        color: white;
+    }
+
+    .primary-buttons {
+        display: flex;
+        width: fit-content;
+        gap: 1rem;
+        justify-content: space-around;
+        margin: auto;
+    }
+
+    .import-modal {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+
+    .import-modal > div {
+        display: flex;
+        gap: 1rem;
+    }
+
+    #import-textarea {
+        height: 70%;
+        width: 90%;
+        margin: 1rem;
+        background-color: #f0f0f0;
+        border-radius: 3px;
+    }
 </style>
 
-<h1>Book Logger</h1>
-<button onclick={() => modalVisible = !modalVisible}>Add new entry</button>
 <script>
     import { books } from "./global.svelte.js";
     import BookEntry from "./BookEntry.svelte";
@@ -205,7 +266,27 @@
             } 
         }   
     }
+
+    let exportModalVisible = $state(false)  ;
+    function exportStorage() {
+        return load();
+    }
+
+    function copyToClipboard(string) {
+        navigator.clipboard.writeText(string);
+    } 
+    
+    let importModalVisible = $state(false);
+    let importTextareaContent = $state("Your save data here");
 </script>
+
+<h1>Book Logger</h1>
+<div class="primary-buttons">
+    <button onclick={() => modalVisible = !modalVisible}>Add new entry</button>
+    <button class="import-btn" onclick={() => importModalVisible = true}>Import</button>
+    <button class="export-btn" onclick={() => exportModalVisible = true}>Export</button>
+</div>
+
 
 {#if modalVisible}
 <div class="filtered"></div>
@@ -237,6 +318,47 @@
         <button class="modal-btn done" onclick={newEntry}>Done</button>
     </div>
 </div>
+{/if}
+{#if exportModalVisible}
+    <div class="filtered"></div>
+    <div class="modal export-data">
+        <h2>Export Data</h2>
+        <div>
+            <p id="export-data-element">{exportStorage()}</p>
+            <button onclick={function() {
+                copyToClipboard(exportStorage());
+                const element = this;
+                element.textContent = "Copied!";
+                setTimeout(() => element.textContent = "Copy", 3000);
+            }}>Copy</button>
+        </div>
+        <button onclick={() => exportModalVisible = false}>Close</button>
+    </div>
+{/if}
+{#if importModalVisible}
+    <div class="filtered"></div>
+    <div class="modal import-modal">
+        <textarea id="import-textarea" bind:value={importTextareaContent}></textarea>
+        <div>
+            <button onclick={() => importModalVisible = false}>Cancel</button>
+            <button class="import-btn" onclick={() => {
+                try {
+                    // the following code has to be done this way since imports arent mutable via assigments
+                    const textarea = JSON.parse(importTextareaContent);
+                    // remove all indexes
+                    books.splice(0, books.length);
+                    // add new indexes
+                    textarea.forEach(book => {
+                        books.push(book);
+                    });
+                    importModalVisible = false;
+                    save();
+                } catch {
+                    document.getElementById("import-textarea").style.border = "rgb(255, 69, 69) solid 1px";
+                }    
+            }}>Import</button>
+        </div>
+    </div>
 {/if}
 {#each books as Book (Book.id)}
     <BookEntry {...Book} />
